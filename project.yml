@@ -1,0 +1,144 @@
+name: NudgeList
+
+options:
+  bundleIdPrefix: com.m4ckdev
+  deploymentTarget:
+    iOS: "17.0"
+    macOS: "14.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: 5.0
+    CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: ""
+
+configs:
+  Debug: debug
+  Release: release
+
+targets:
+  NudgeList-iOS:
+    type: application
+    platform: iOS
+    sources:
+      - path: NudgeList
+        excludes:
+          - Resources
+    resources:
+      - path: NudgeList/Resources/Assets.xcassets
+      - path: NudgeList/Resources/PrivacyInfo.xcprivacy
+    info:
+      path: NudgeList/Resources/Info-iOS.plist
+      properties:
+        CFBundleDisplayName: Nudge List
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        ITSAppUsesNonExemptEncryption: false
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UIBackgroundModes:
+          - remote-notification
+    settings:
+      base:
+        TARGETED_DEVICE_FAMILY: "1"
+        SUPPORTS_MACCATALYST: NO
+        PRODUCT_BUNDLE_IDENTIFIER: com.m4ckdev.NudgeList
+        PRODUCT_NAME: NudgeList
+        PRODUCT_MODULE_NAME: NudgeList
+        MARKETING_VERSION: 1.0.0
+        CURRENT_PROJECT_VERSION: 1
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGN_ENTITLEMENTS: NudgeList/Resources/NudgeList-iOS.entitlements
+        ENABLE_PREVIEWS: YES
+        SWIFT_EMIT_LOC_STRINGS: YES
+
+  NudgeList-macOS:
+    type: application
+    platform: macOS
+    sources:
+      - path: NudgeList
+        excludes:
+          - Resources
+    resources:
+      - path: NudgeList/Resources/Assets.xcassets
+      - path: NudgeList/Resources/PrivacyInfo.xcprivacy
+    info:
+      path: NudgeList/Resources/Info-macOS.plist
+      properties:
+        CFBundleDisplayName: Nudge List
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        ITSAppUsesNonExemptEncryption: false
+        LSMinimumSystemVersion: "14.0"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.m4ckdev.NudgeList
+        PRODUCT_NAME: NudgeList
+        PRODUCT_MODULE_NAME: NudgeList
+        MARKETING_VERSION: 1.0.0
+        CURRENT_PROJECT_VERSION: 1
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGN_ENTITLEMENTS: NudgeList/Resources/NudgeList-macOS.entitlements
+        ENABLE_HARDENED_RUNTIME: YES
+        ENABLE_PREVIEWS: YES
+        SWIFT_EMIT_LOC_STRINGS: YES
+
+  NudgeListTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: NudgeListTests
+    dependencies:
+      - target: NudgeList-iOS
+    settings:
+      base:
+        TARGETED_DEVICE_FAMILY: "1"
+        PRODUCT_BUNDLE_IDENTIFIER: com.m4ckdev.NudgeListTests
+        PRODUCT_NAME: NudgeListTests
+        GENERATE_INFOPLIST_FILE: YES
+
+  NudgeListUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: NudgeListUITests
+    dependencies:
+      - target: NudgeList-iOS
+    settings:
+      base:
+        TARGETED_DEVICE_FAMILY: "1"
+        PRODUCT_BUNDLE_IDENTIFIER: com.m4ckdev.NudgeListUITests
+        PRODUCT_NAME: NudgeListUITests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: NudgeList-iOS
+
+schemes:
+  NudgeList-iOS:
+    build:
+      targets:
+        NudgeList-iOS: all
+        NudgeListTests:
+          - test
+        NudgeListUITests:
+          - test
+    run:
+      config: Debug
+    test:
+      config: Debug
+      gatherCoverageData: true
+      targets:
+        - name: NudgeListTests
+        - name: NudgeListUITests
+    archive:
+      config: Release
+
+  NudgeList-macOS:
+    build:
+      targets:
+        NudgeList-macOS: all
+    run:
+      config: Debug
+    archive:
+      config: Release
