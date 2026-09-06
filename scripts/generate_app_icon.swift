@@ -16,12 +16,12 @@ guard let bitmap = NSBitmapImageRep(
     pixelsWide: width,
     pixelsHigh: height,
     bitsPerSample: 8,
-    samplesPerPixel: 4,
+    samplesPerPixel: 3,
     hasAlpha: false,
     isPlanar: false,
     colorSpaceName: .deviceRGB,
     bytesPerRow: 0,
-    bitsPerPixel: 0
+    bitsPerPixel: 24
 ) else {
     fputs("Unable to create bitmap.\n", stderr)
     exit(1)
@@ -37,7 +37,7 @@ NSGraphicsContext.current = graphicsContext
 
 let canvas = NSRect(x: 0, y: 0, width: width, height: height)
 NSColor(calibratedRed: 0.10, green: 0.12, blue: 0.16, alpha: 1.0).setFill()
-canvas.fill()
+NSBezierPath(rect: canvas).fill()
 
 let ringRect = NSRect(x: 202, y: 202, width: 620, height: 620)
 let ring = NSBezierPath(ovalIn: ringRect)
