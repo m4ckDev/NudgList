@@ -2,12 +2,10 @@ import AppKit
 import Foundation
 
 let arguments = CommandLine.arguments
-guard arguments.count == 2 else {
-    fputs("Usage: swift generate_app_icon.swift <output-png>\n", stderr)
-    exit(64)
-}
+let defaultOutputPath = "NudgeList/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png"
+let outputPath = arguments.dropFirst().first ?? defaultOutputPath
+let outputURL = URL(fileURLWithPath: outputPath)
 
-let outputURL = URL(fileURLWithPath: arguments[1])
 let width = 1024
 let height = 1024
 
