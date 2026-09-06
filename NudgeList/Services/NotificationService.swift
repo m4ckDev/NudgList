@@ -14,8 +14,12 @@ final class NotificationService {
         let settings = await notificationSettings()
 
         switch settings.authorizationStatus {
-        case .authorized, .provisional, .ephemeral:
+        case .authorized, .provisional:
             return true
+        #if os(iOS)
+        case .ephemeral:
+            return true
+        #endif
         case .denied:
             return false
         case .notDetermined:
@@ -66,9 +70,20 @@ final class NotificationService {
 
     func reconcile(_ nudges: [Nudge]) async {
         let settings = await notificationSettings()
-        guard [.authorized, .provisional, .ephemeral].contains(settings.authorizationStatus) else {
-            return
+
+        let isAuthorized: Bool
+        switch settings.authorizationStatus {
+        case .authorized, .provisional:
+            isAuthorized = true
+        #if os(iOS)
+        case .ephemeral:
+            isAuthorized = true
+        #endif
+        default:
+            isAuthorized = false
         }
+
+        guard isAuthorized else { return }
 
         let pending = await pendingRequests()
         let managedIdentifiers = pending
