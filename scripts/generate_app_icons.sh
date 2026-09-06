@@ -5,18 +5,32 @@ ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT_DIR"
 
 ICON_DIR="NudgeList/Resources/Assets.xcassets/AppIcon.appiconset"
+SOURCE_SVG="docs/app-logo.svg"
 BASE="$ICON_DIR/AppIcon-1024.png"
 
 mkdir -p "$ICON_DIR"
 
+if [[ ! -f "$SOURCE_SVG" ]]; then
+  echo "Error: missing $SOURCE_SVG" >&2
+  exit 1
+fi
+
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
-GENERATOR="$TMP_DIR/generate_app_icon"
 
-# Compile the Swift generator first. Running it through `swift` directly can
-# expose Swift frontend arguments (for example `-frontend`) to CommandLine.
-xcrun swiftc scripts/generate_app_icon.swift -o "$GENERATOR"
-"$GENERATOR" "$BASE"
+# Prefer sips if this macOS build can read SVG. Otherwise use Quick Look,
+# which is available on macOS and can render the SVG to a PNG thumbnail.
+if sips -s format png "$SOURCE_SVG" --out "$BASE" >/dev/null 2>&1; then
+  :
+else
+  qlmanage -t -s 1024 -o "$TMP_DIR" "$SOURCE_SVG" >/dev/null 2>&1
+  QL_PNG="$TMP_DIR/$(basename "$SOURCE_SVG").png"
+  if [[ ! -f "$QL_PNG" ]]; then
+    echo "Error: unable to render $SOURCE_SVG to PNG" >&2
+    exit 1
+  fi
+  cp "$QL_PNG" "$BASE"
+fi
 
 if [[ ! -f "$BASE" ]]; then
   echo "Error: base app icon was not generated at $BASE" >&2
@@ -49,4 +63,5 @@ resize 512 AppIcon-mac-256@2x.png
 resize 512 AppIcon-mac-512.png
 resize 1024 AppIcon-mac-512@2x.png
 
+echo "Generated $BASE"
 echo "App icon set generated."
