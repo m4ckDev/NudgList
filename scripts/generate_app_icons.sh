@@ -8,7 +8,20 @@ ICON_DIR="NudgeList/Resources/Assets.xcassets/AppIcon.appiconset"
 BASE="$ICON_DIR/AppIcon-1024.png"
 
 mkdir -p "$ICON_DIR"
-xcrun swift scripts/generate_app_icon.swift "$BASE"
+
+TMP_DIR="$(mktemp -d)"
+trap 'rm -rf "$TMP_DIR"' EXIT
+GENERATOR="$TMP_DIR/generate_app_icon"
+
+# Compile the Swift generator first. Running it through `swift` directly can
+# expose Swift frontend arguments (for example `-frontend`) to CommandLine.
+xcrun swiftc scripts/generate_app_icon.swift -o "$GENERATOR"
+"$GENERATOR" "$BASE"
+
+if [[ ! -f "$BASE" ]]; then
+  echo "Error: base app icon was not generated at $BASE" >&2
+  exit 1
+fi
 
 resize() {
   local size="$1"
