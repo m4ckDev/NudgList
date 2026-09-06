@@ -1,5 +1,7 @@
-import AppKit
+import CoreGraphics
 import Foundation
+import ImageIO
+import UniformTypeIdentifiers
 
 let arguments = CommandLine.arguments
 let defaultOutputPath = "NudgeList/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png"
@@ -8,55 +10,40 @@ let outputURL = URL(fileURLWithPath: outputPath)
 
 let width = 1024
 let height = 1024
+let colorSpace = CGColorSpaceCreateDeviceRGB()
+let bitmapInfo = CGImageAlphaInfo.premultipliedLast.rawValue
 
-guard let bitmap = NSBitmapImageRep(
-    bitmapDataPlanes: nil,
-    pixelsWide: width,
-    pixelsHigh: height,
-    bitsPerSample: 8,
-    samplesPerPixel: 3,
-    hasAlpha: false,
-    isPlanar: false,
-    colorSpaceName: .deviceRGB,
+guard let context = CGContext(
+    data: nil,
+    width: width,
+    height: height,
+    bitsPerComponent: 8,
     bytesPerRow: 0,
-    bitsPerPixel: 24
+    space: colorSpace,
+    bitmapInfo: bitmapInfo
 ) else {
-    fputs("Unable to create bitmap.\n", stderr)
+    fputs("Unable to create Core Graphics context.\n", stderr)
     exit(1)
 }
 
-guard let graphicsContext = NSGraphicsContext(bitmapImageRep: bitmap) else {
-    fputs("Unable to create graphics context.\n", stderr)
-    exit(1)
-}
+context.setFillColor(CGColor(red: 0.10, green: 0.12, blue: 0.16, alpha: 1.0))
+context.fill(CGRect(x: 0, y: 0, width: width, height: height))
 
-NSGraphicsContext.saveGraphicsState()
-NSGraphicsContext.current = graphicsContext
+context.setStrokeColor(CGColor(gray: 1.0, alpha: 1.0))
+context.setLineWidth(54)
+context.strokeEllipse(in: CGRect(x: 202, y: 202, width: 620, height: 620))
 
-let canvas = NSRect(x: 0, y: 0, width: width, height: height)
-NSColor(calibratedRed: 0.10, green: 0.12, blue: 0.16, alpha: 1.0).setFill()
-NSBezierPath(rect: canvas).fill()
+context.setLineWidth(70)
+context.setLineCap(.round)
+context.setLineJoin(.round)
+context.beginPath()
+context.move(to: CGPoint(x: 340, y: 515))
+context.addLine(to: CGPoint(x: 455, y: 395))
+context.addLine(to: CGPoint(x: 690, y: 650))
+context.strokePath()
 
-let ringRect = NSRect(x: 202, y: 202, width: 620, height: 620)
-let ring = NSBezierPath(ovalIn: ringRect)
-ring.lineWidth = 54
-NSColor.white.setStroke()
-ring.stroke()
-
-let check = NSBezierPath()
-check.move(to: NSPoint(x: 340, y: 515))
-check.line(to: NSPoint(x: 455, y: 395))
-check.line(to: NSPoint(x: 690, y: 650))
-check.lineWidth = 70
-check.lineCapStyle = .round
-check.lineJoinStyle = .round
-NSColor.white.setStroke()
-check.stroke()
-
-NSGraphicsContext.restoreGraphicsState()
-
-guard let pngData = bitmap.representation(using: .png, properties: [:]) else {
-    fputs("Unable to encode PNG.\n", stderr)
+guard let image = context.makeImage() else {
+    fputs("Unable to create icon image.\n", stderr)
     exit(1)
 }
 
@@ -65,9 +52,26 @@ do {
         at: outputURL.deletingLastPathComponent(),
         withIntermediateDirectories: true
     )
-    try pngData.write(to: outputURL, options: .atomic)
-    print("Generated \(outputURL.path)")
 } catch {
-    fputs("Unable to write icon: \(error)\n", stderr)
+    fputs("Unable to create icon directory: \(error)\n", stderr)
     exit(1)
 }
+
+guard let destination = CGImageDestinationCreateWithURL(
+    outputURL as CFURL,
+    UTType.png.identifier as CFString,
+    1,
+    nil
+) else {
+    fputs("Unable to create PNG destination.\n", stderr)
+    exit(1)
+}
+
+CGImageDestinationAddImage(destination, image, nil)
+
+guard CGImageDestinationFinalize(destination) else {
+    fputs("Unable to encode PNG.\n", stderr)
+    exit(1)
+}
+
+print("Generated \(outputURL.path)")
