@@ -30,21 +30,36 @@ struct NudgeEditorView: View {
         !title.trimmed.isEmpty && !isSaving
     }
 
+    private var pageBackground: Color {
+        #if os(iOS)
+        Color(uiColor: .systemGroupedBackground)
+        #else
+        Color(nsColor: .windowBackgroundColor)
+        #endif
+    }
+
     var body: some View {
         NavigationStack {
             Form {
-                Section("Nudge") {
+                Section {
                     TextField("What do you need to remember?", text: $title)
+                        .font(.title3.weight(.semibold))
                         .accessibilityIdentifier("nudge-title-field")
 
                     TextField("Optional note", text: $note, axis: .vertical)
+                        .font(.body)
                         .lineLimit(2...5)
                         .accessibilityIdentifier("nudge-note-field")
+                } header: {
+                    Label("Nudge", systemImage: "square.and.pencil")
                 }
 
-                Section("Reminder") {
-                    Toggle("Remind me", isOn: $hasReminder)
-                        .accessibilityIdentifier("nudge-reminder-toggle")
+                Section {
+                    Toggle(isOn: $hasReminder) {
+                        Label("Remind me", systemImage: "bell")
+                    }
+                    .tint(.accentColor)
+                    .accessibilityIdentifier("nudge-reminder-toggle")
 
                     if hasReminder {
                         DatePicker(
@@ -55,19 +70,32 @@ struct NudgeEditorView: View {
                         .accessibilityIdentifier("nudge-date-picker")
 
                         if dueDate <= .now {
-                            Label("Choose a future time.", systemImage: "exclamationmark.triangle")
-                                .font(.footnote)
-                                .foregroundStyle(.secondary)
+                            Label("Choose a future time.", systemImage: "exclamationmark.triangle.fill")
+                                .font(.footnote.weight(.medium))
+                                .foregroundStyle(.orange)
                         }
+                    }
+                } header: {
+                    Label("Reminder", systemImage: "clock")
+                } footer: {
+                    if hasReminder && dueDate > .now {
+                        Text("Nudge List will alert you at the selected time.")
                     }
                 }
 
                 Section {
-                    Text("Nudges are stored on your device and can sync through your private iCloud account on your Apple devices.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                    Label {
+                        Text("Nudges stay private on your device and can sync through your private iCloud account on your Apple devices.")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    } icon: {
+                        Image(systemName: "lock.shield.fill")
+                            .foregroundStyle(Color.accentColor)
+                    }
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(pageBackground)
             .navigationTitle(navigationTitle)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -80,6 +108,7 @@ struct NudgeEditorView: View {
                     Button("Save") {
                         Task { await save() }
                     }
+                    .fontWeight(.semibold)
                     .disabled(!canSave || (hasReminder && dueDate <= .now))
                     .accessibilityIdentifier("save-nudge-button")
                 }
@@ -95,8 +124,11 @@ struct NudgeEditorView: View {
             } message: {
                 Text(errorMessage ?? "Unknown error")
             }
+            #if os(iOS)
+            .presentationDragIndicator(.visible)
+            #endif
             #if os(macOS)
-            .frame(minWidth: 440, minHeight: 420)
+            .frame(minWidth: 460, minHeight: 440)
             #endif
         }
     }
