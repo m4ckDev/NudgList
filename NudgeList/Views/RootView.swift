@@ -29,6 +29,14 @@ struct RootView: View {
         }
     }
 
+    private var pageBackground: Color {
+        #if os(iOS)
+        Color(uiColor: .systemGroupedBackground)
+        #else
+        Color(nsColor: .windowBackgroundColor)
+        #endif
+    }
+
     private var reminderSignature: String {
         nudges
             .map { nudge in
@@ -41,38 +49,42 @@ struct RootView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                Picker("View", selection: $filter) {
-                    ForEach(NudgeFilter.allCases) { filter in
-                        Text(filter.rawValue).tag(filter)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .padding(.horizontal)
-                .padding(.vertical, 10)
-                .accessibilityIdentifier("nudge-filter-picker")
+            ZStack {
+                pageBackground
+                    .ignoresSafeArea()
 
-                if visibleNudges.isEmpty {
-                    ContentUnavailableView(
-                        filter == .active ? "Nothing to nudge" : "Nothing completed yet",
-                        systemImage: filter == .active ? "checkmark.circle" : "clock.arrow.circlepath",
-                        description: Text(
-                            filter == .active
-                            ? "Add something small you do not want to forget."
-                            : "Completed nudges will appear here."
-                        )
-                    )
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else {
-                    List {
-                        ForEach(visibleNudges) { nudge in
-                            NudgeRowView(
-                                nudge: nudge,
-                                onToggleCompletion: { toggleCompletion(nudge) },
-                                onEdit: { editorRoute = EditorRoute(nudge: nudge) },
-                                onDelete: { delete(nudge) }
-                            )
+                VStack(spacing: 0) {
+                    Picker("View", selection: $filter) {
+                        ForEach(NudgeFilter.allCases) { filter in
+                            Text(filter.rawValue).tag(filter)
                         }
+                    }
+                    .pickerStyle(.segmented)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
+                    .padding(.bottom, 12)
+                    .accessibilityIdentifier("nudge-filter-picker")
+
+                    if visibleNudges.isEmpty {
+                        emptyState
+                    } else {
+                        List {
+                            ForEach(visibleNudges) { nudge in
+                                NudgeRowView(
+                                    nudge: nudge,
+                                    onToggleCompletion: { toggleCompletion(nudge) },
+                                    onEdit: { editorRoute = EditorRoute(nudge: nudge) },
+                                    onDelete: { delete(nudge) }
+                                )
+                                .listRowInsets(
+                                    EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16)
+                                )
+                                .listRowSeparator(.hidden)
+                                .listRowBackground(Color.clear)
+                            }
+                        }
+                        .listStyle(.plain)
+                        .scrollContentBackground(.hidden)
                     }
                 }
             }
@@ -94,6 +106,39 @@ struct RootView: View {
                 await NotificationService.shared.reconcile(nudges)
             }
         }
+    }
+
+    private var emptyState: some View {
+        VStack(spacing: 16) {
+            ZStack {
+                Circle()
+                    .fill(Color.accentColor.opacity(0.12))
+                    .frame(width: 82, height: 82)
+
+                Image(systemName: filter == .active ? "checkmark.circle.fill" : "clock.arrow.circlepath")
+                    .font(.system(size: 36, weight: .semibold))
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(Color.accentColor)
+            }
+
+            VStack(spacing: 6) {
+                Text(filter == .active ? "Nothing to nudge" : "Nothing completed yet")
+                    .font(.title3.weight(.semibold))
+
+                Text(
+                    filter == .active
+                    ? "Add something small you do not want to forget."
+                    : "Completed nudges will appear here."
+                )
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 320)
+            }
+        }
+        .padding(32)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .accessibilityElement(children: .combine)
     }
 
     private func toggleCompletion(_ nudge: Nudge) {
