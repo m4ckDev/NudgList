@@ -1,0 +1,14 @@
+# macOS
+.DS_Store
+
+# Xcode / XcodeGen generated files
+DerivedData/
+NudgeList.xcodeproj/
+NudgeList/Resources/Info-iOS.plist
+NudgeList/Resources/Info-macOS.plist
+
+# Accidental nested working copy
+NudgList/
+
+# App Store icon assets must remain versioned even if a global Git ignore excludes PNGs.
+!NudgeList/Resources/Assets.xcassets/AppIcon.appiconset/*.png
