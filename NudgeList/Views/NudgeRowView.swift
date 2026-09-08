@@ -11,11 +11,25 @@ struct NudgeRowView: View {
         return !nudge.isCompleted && dueDate < .now
     }
 
+    private var cardBackground: Color {
+        #if os(iOS)
+        Color(uiColor: .secondarySystemGroupedBackground)
+        #else
+        Color(nsColor: .controlBackgroundColor)
+        #endif
+    }
+
+    private var reminderColor: Color {
+        isOverdue ? .red : .accentColor
+    }
+
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .top, spacing: 13) {
             Button(action: onToggleCompletion) {
                 Image(systemName: nudge.isCompleted ? "checkmark.circle.fill" : "circle")
-                    .font(.title3)
+                    .font(.system(size: 25, weight: .medium))
+                    .foregroundStyle(nudge.isCompleted ? Color.accentColor : Color.secondary)
+                    .contentTransition(.symbolEffect(.replace))
             }
             .buttonStyle(.plain)
             .accessibilityLabel(
@@ -25,9 +39,9 @@ struct NudgeRowView: View {
             )
 
             Button(action: onEdit) {
-                VStack(alignment: .leading, spacing: 5) {
+                VStack(alignment: .leading, spacing: 7) {
                     Text(nudge.title)
-                        .font(.body.weight(.medium))
+                        .font(.body.weight(.semibold))
                         .strikethrough(nudge.isCompleted)
                         .foregroundStyle(.primary)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -42,11 +56,15 @@ struct NudgeRowView: View {
 
                     if let dueDate = nudge.dueDate {
                         HStack(spacing: 5) {
-                            Image(systemName: "bell")
+                            Image(systemName: isOverdue ? "exclamationmark.circle.fill" : "bell.fill")
                             Text(isOverdue ? "Overdue · \(dueDate.nudgeDisplayText)" : dueDate.nudgeDisplayText)
                         }
-                        .font(.caption)
-                        .foregroundStyle(isOverdue ? .red : .secondary)
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(reminderColor)
+                        .padding(.horizontal, 9)
+                        .padding(.vertical, 5)
+                        .background(reminderColor.opacity(0.10), in: Capsule())
+                        .fixedSize(horizontal: false, vertical: true)
                     }
                 }
                 .contentShape(Rectangle())
@@ -54,7 +72,17 @@ struct NudgeRowView: View {
             .buttonStyle(.plain)
             .accessibilityLabel("Edit \(nudge.title)")
         }
-        .padding(.vertical, 4)
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(cardBackground)
+        )
+        .overlay {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(Color.primary.opacity(0.055), lineWidth: 1)
+        }
+        .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 2)
+        .opacity(nudge.isCompleted ? 0.66 : 1)
         .contextMenu {
             Button("Edit", systemImage: "pencil", action: onEdit)
 
