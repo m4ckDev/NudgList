@@ -25,7 +25,6 @@ targets:
       - path: NudgeList
         excludes:
           - Resources
-    resources:
       - path: NudgeList/Resources/Assets.xcassets
       - path: NudgeList/Resources/PrivacyInfo.xcprivacy
     info:
@@ -61,7 +60,6 @@ targets:
       - path: NudgeList
         excludes:
           - Resources
-    resources:
       - path: NudgeList/Resources/Assets.xcassets
       - path: NudgeList/Resources/PrivacyInfo.xcprivacy
     info:
